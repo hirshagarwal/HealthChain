@@ -1,3 +1,5 @@
+import uuid
+
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
@@ -5,7 +7,8 @@ from cryptography.hazmat.primitives import hashes
 
 class User:
 
-    def __init__(self):
+    def __init__(self, user_id):
+        self.user_id = user_id
         self.private_key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=2048
@@ -23,10 +26,10 @@ class User:
         )
 
     @staticmethod
-    def verify_message(signed_message, public_key):
+    def verify_message(signed_message, expected_message, public_key):
         public_key.verify(
             signed_message,
-            input_text,
+            expected_message,
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
                 salt_length=padding.PSS.MAX_LENGTH
@@ -36,7 +39,7 @@ class User:
 
 
 if __name__ == '__main__':
-    user = User()
+    user = User(uuid.uuid4())
     input_text = "H2 Micro".encode('utf-8')
     message = user.sign_message(input_text)
     user.verify_message(message, user.public_key)
