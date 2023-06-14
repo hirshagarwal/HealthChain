@@ -1,6 +1,9 @@
+import sys
 import uuid
 
 from bottle import Bottle, request
+
+from blockchain import Chain
 
 
 class Node(Bottle):
@@ -11,6 +14,7 @@ class Node(Bottle):
         self.host = host
         self.port = port
         self.name = "Node"
+        self.blockchain = Chain()
 
         # API Paths
         self.get('/test', callback=self.test)
@@ -34,6 +38,9 @@ class Node(Bottle):
 
     def register_node(self):
         new_node_string = request.headers.get('node_connection_string')
+        self.nodes.add(new_node_string)
+        return self.blockchain.blockchain
+        # TODO: Return the current blockchain
 
     def test(self):
         return_message = request.headers.get('message')
@@ -45,11 +52,8 @@ class Node(Bottle):
 
 if __name__ == '__main__':
     node = Node('localhost', 8080)
-    # node.run(host=node.host, port=8080, debug=True)
 
 # TODO: Clean this up and add some checks for the input
-#node = Node(str(sys.argv[1]), sys.argv[2], sys.argv[3])
-#node.run()
-#route('/test')(node.test)
+Node(str(sys.argv[1]), sys.argv[2], sys.argv[3])
 
 

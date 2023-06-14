@@ -68,23 +68,23 @@ class Chain:
             self.blockchain.append(new_block)
         else:
             user_origin_block = self.blockchain[user_index]
-            user_data = UserData.json_deserialize_userdata(user_origin_block.data)
-            public_key = load_pem_public_key(user_data.public_key.encode('utf-8'))
-            User.verify_message(
-                new_block.signed_hash,
-                new_block.hash_block().encode('utf-8'),
-                public_key)
+            self.verify_transaction(user_origin_block, new_block)
             self.blockchain.append(new_block)
-            pass
 
     def read_tail_block(self) -> Block:
         return self.blockchain[len(self.blockchain) - 1]
-
-    def verify_transaction(self):
-        pass
 
     def find_user_exist(self, user_id) -> int:
         for block in self.blockchain:
             if block.user_id == user_id:
                 return block.index
         return -1
+
+    @staticmethod
+    def verify_transaction(user_origin_block, new_block):
+        user_data = UserData.json_deserialize_userdata(user_origin_block.data)
+        public_key = load_pem_public_key(user_data.public_key.encode('utf-8'))
+        User.verify_message(
+            new_block.signed_hash,
+            new_block.hash_block().encode('utf-8'),
+            public_key)

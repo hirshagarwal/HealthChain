@@ -42,4 +42,4 @@ if __name__ == '__main__':
     user = User(uuid.uuid4())
     input_text = "H2 Micro".encode('utf-8')
     message = user.sign_message(input_text)
-    user.verify_message(message, user.public_key)
+    user.verify_message(message, input_text, user.public_key)
