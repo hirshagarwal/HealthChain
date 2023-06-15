@@ -10,7 +10,7 @@ class Note(Record):
 
     def json_serialize(self):
         data = {
-            'record_type': self.record_type.value,
+            'record_type': self.record_type.name,
             'clinical_note': self.clinical_note
         }
         return json.dumps(data)

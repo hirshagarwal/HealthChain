@@ -20,6 +20,8 @@ if __name__ == '__main__':
         user.public_key
     )
 
+    print(init_user_block.json_serialize())
+
     # Persist user
     new_block = Block.new_block(first_block, user.user_id, init_user_block.json_serialize())
     blockchain.add_block(new_block)

@@ -1,5 +1,7 @@
 import datetime as dt
 import hashlib as hl
+import json
+from base64 import b64encode
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
@@ -23,7 +25,7 @@ class Block:
         string_builder += "Timestamp: " + str(self.timestamp) + "\n"
         string_builder += "Previous Hash: " + str(self.prev_hash) + "\n"
         string_builder += "Hash: " + str(self.hash_block()) + "\n"
-        string_builder += "Signed Hash: " + str(self.signed_hash) + "\n"
+        string_builder += "Signed Hash: " + self.get_b64_string(self.signed_hash) + "\n"
         string_builder += "Data: " + str(self.data)
         return string_builder
 
@@ -37,6 +39,17 @@ class Block:
         block_encryption.update(encoded_block)
         return block_encryption.hexdigest()
 
+    def get_dict(self):
+        return {
+            'index': self.index,
+            'timestamp': str(self.timestamp),
+            'data': self.data,
+            'prev_hash': self.prev_hash,
+            'user_id': self.user_id,
+            'hash': self.hash,
+            'signed_hash': self.get_b64_string(self.signed_hash)
+        }
+
     @staticmethod
     def genesis_block():
         return Block(0, dt.datetime.now(), "Genesis block transaction", " ", "root")
@@ -48,6 +61,12 @@ class Block:
         timestamp = dt.datetime.now()
         hash_block = last_block.hash
         return Block(index, timestamp, json_block_data, hash_block, user_id)
+
+    @staticmethod
+    def get_b64_string(message):
+        if message is not None:
+            return str(b64encode(message))
+        return None
 
 
 class Chain:
@@ -62,7 +81,6 @@ class Chain:
         return sb
 
     def add_block(self, new_block: Block):
-        # TODO: Run consensus mechanism
         user_index = self.find_user_exist(new_block.user_id)
         if user_index == -1:
             self.blockchain.append(new_block)
@@ -79,6 +97,12 @@ class Chain:
             if block.user_id == user_id:
                 return block.index
         return -1
+
+    def get_json(self):
+        dict_array = []
+        for block_dict in self.blockchain:
+            dict_array.append(block_dict.get_dict())
+        return json.dumps(dict_array)
 
     @staticmethod
     def verify_transaction(user_origin_block, new_block):

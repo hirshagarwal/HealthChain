@@ -1,6 +1,9 @@
+import base64
 import json
 
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives._serialization import PublicFormat, Encoding
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 
 from records.record import Record, RecordType
@@ -8,7 +11,7 @@ from records.record import Record, RecordType
 
 class UserData(Record):
     def __init__(self, first_name, last_name, dob, public_key):
-        super().__init__(record_type=RecordType.NOTE)
+        super().__init__(record_type=RecordType.USER_DATA)
         self.first_name = first_name
         self.last_name = last_name
         self.dob = dob
@@ -19,13 +22,21 @@ class UserData(Record):
 
     def json_serialize(self):
         data = {
-            'record_type': self.record_type.value,
-            'first_name': self.first_name,
+            'record_type': self.record_type.name,
+            'first_name': str(base64.b64encode(self.encrypt(self.first_name))),
             'last_name': self.last_name,
             'dob': self.dob,
             'public_key': self.public_key.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo).decode('utf-8')
         }
         return json.dumps(data)
+
+    def encrypt(self, data):
+        return self.public_key.encrypt(data.encode('utf-8'),
+                                       padding.OAEP(
+                                           mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                                           algorithm=hashes.SHA256(),
+                                           label=None
+                                       ))
 
     @staticmethod
     def json_deserialize_userdata(json_string):
