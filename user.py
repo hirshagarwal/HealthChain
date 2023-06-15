@@ -6,7 +6,6 @@ from cryptography.hazmat.primitives import hashes
 
 
 class User:
-
     def __init__(self, user_id):
         self.user_id = user_id
         self.private_key = rsa.generate_private_key(

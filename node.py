@@ -2,7 +2,7 @@ import json
 import sys
 import uuid
 
-from bottle import Bottle, request
+from bottle import Bottle, request, response
 
 from blockchain import Chain, Block
 
@@ -21,6 +21,7 @@ class Node(Bottle):
         self.get('/test', callback=self.test)
         self.get('/list_nodes', callback=self.list_nodes)
         self.get('/get_blockchain', callback=self.get_blockchain)
+        self.get('/get_tail_block', callback=self.get_tail_block)
 
         self.post('/register_node', callback=self.register_node)
         self.post('/add_block', callback=self.add_block)
@@ -61,9 +62,20 @@ class Node(Bottle):
         return self.node_connection_string()
 
     def get_blockchain(self):
-        return self.blockchain.get_json()
+        response.content_type = 'application/json'
+        json_chain = self.blockchain.get_json()
+        object_chain = {
+            "blockchain_length": len(self.blockchain.blockchain),
+            "blockchain": json.loads(json_chain)
+        }
+        return json.dumps(object_chain)
+
+    def get_tail_block(self):
+        response.content_type = 'application/json'
+        return self.blockchain.read_tail_block().get_json()
 
     def add_block(self):
+        response.content_type = 'application/json'
         add_block_string = request.body.read()
         add_block_json = json.loads(add_block_string)
         data = add_block_json['block_data']

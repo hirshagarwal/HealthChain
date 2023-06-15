@@ -5,7 +5,8 @@ from base64 import b64encode
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
-from records.userdata import UserData
+from records import record
+from records.record import RecordType
 from user import User
 
 
@@ -13,7 +14,7 @@ class Block:
     def __init__(self, index, timestamp, data, prev_hash, user_id):
         self.index = index
         self.timestamp = timestamp
-        self.data = data
+        self.data: record = data
         self.prev_hash = prev_hash
         self.user_id = user_id
         self.hash = self.hash_block()
@@ -25,7 +26,8 @@ class Block:
         string_builder += "Timestamp: " + str(self.timestamp) + "\n"
         string_builder += "Previous Hash: " + str(self.prev_hash) + "\n"
         string_builder += "Hash: " + str(self.hash_block()) + "\n"
-        string_builder += "Signed Hash: " + self.get_b64_string(self.signed_hash) + "\n"
+        if self.signed_hash is not None:
+            string_builder += "Signed Hash: " + str(b64encode(self.signed_hash)) + "\n"
         string_builder += "Data: " + str(self.data)
         return string_builder
 
@@ -50,6 +52,9 @@ class Block:
             'signed_hash': self.get_b64_string(self.signed_hash)
         }
 
+    def get_json(self):
+        return json.dumps(self.get_dict())
+
     @staticmethod
     def genesis_block():
         return Block(0, dt.datetime.now(), "Genesis block transaction", " ", "root")
@@ -68,6 +73,15 @@ class Block:
             return str(b64encode(message))
         return None
 
+    @staticmethod
+    def from_json(json_block):
+        return Block(json_block['index'],
+                     json_block['timestamp'],
+                     json_block['data'],
+                     json_block['prev_hash'],
+                     json_block['user_id']
+                     )
+
 
 class Chain:
     def __init__(self):
@@ -83,6 +97,7 @@ class Chain:
     def add_block(self, new_block: Block):
         user_index = self.find_user_exist(new_block.user_id)
         if user_index == -1:
+            assert new_block.data.record_type == RecordType.USER_DATA
             self.blockchain.append(new_block)
         else:
             user_origin_block = self.blockchain[user_index]
@@ -106,8 +121,8 @@ class Chain:
 
     @staticmethod
     def verify_transaction(user_origin_block, new_block):
-        user_data = UserData.json_deserialize_userdata(user_origin_block.data)
-        public_key = load_pem_public_key(user_data.public_key.encode('utf-8'))
+        user_data = user_origin_block.data
+        public_key = load_pem_public_key(user_data['public_key'].encode('utf-8'))
         User.verify_message(
             new_block.signed_hash,
             new_block.hash_block().encode('utf-8'),
