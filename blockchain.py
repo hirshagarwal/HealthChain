@@ -3,10 +3,10 @@ import hashlib as hl
 import json
 from base64 import b64encode
 
-from cryptography.hazmat.primitives.serialization import load_pem_public_key
-
 from records import record
+from records.note import Note
 from records.record import RecordType
+from records.userdata import UserData
 from user import User
 
 
@@ -45,27 +45,29 @@ class Block:
         return {
             'index': self.index,
             'timestamp': str(self.timestamp),
-            'data': self.data,
+            'block_data': self.data,
             'prev_hash': self.prev_hash,
-            'user_id': self.user_id,
+            'user_id': str(self.user_id),
             'hash': self.hash,
             'signed_hash': self.get_b64_string(self.signed_hash)
         }
 
     def get_json(self):
-        return json.dumps(self.get_dict())
+        serializable_dict: record = self.get_dict()
+        serializable_dict['block_data'] = self.data.get_dict()
+        return json.dumps(serializable_dict)
 
     @staticmethod
     def genesis_block():
         return Block(0, dt.datetime.now(), "Genesis block transaction", " ", "root")
 
     @staticmethod
-    def new_block(last_block, user_id, json_block_data):
+    def new_block(last_block, user_id, block_data: record):
         # TODO: Assert json string
         index = last_block.index + 1
         timestamp = dt.datetime.now()
         hash_block = last_block.hash
-        return Block(index, timestamp, json_block_data, hash_block, user_id)
+        return Block(index, timestamp, block_data, hash_block, user_id)
 
     @staticmethod
     def get_b64_string(message):
@@ -77,10 +79,18 @@ class Block:
     def from_json(json_block):
         return Block(json_block['index'],
                      json_block['timestamp'],
-                     json_block['data'],
+                     json_block['block_data'],
                      json_block['prev_hash'],
                      json_block['user_id']
                      )
+
+    @staticmethod
+    def record_from_json(json_string):
+        json_object = json.loads(json_string)
+        if json_object['record_type'] == RecordType.USER_DATA.name:
+            return UserData.json_deserialize_userdata(json_string)
+        elif json_object['record_type'] == RecordType.CLINICAL_NOTE.name:
+            return Note.json_deserialize_note(json_string)
 
 
 class Chain:
@@ -122,8 +132,7 @@ class Chain:
     @staticmethod
     def verify_transaction(user_origin_block, new_block):
         user_data = user_origin_block.data
-        public_key = load_pem_public_key(user_data['public_key'].encode('utf-8'))
         User.verify_message(
             new_block.signed_hash,
             new_block.hash_block().encode('utf-8'),
-            public_key)
+            user_data.public_key)

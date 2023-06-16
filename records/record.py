@@ -10,6 +10,10 @@ class Record(ABC):
     def json_serialize(self):
         pass
 
+    @abstractmethod
+    def get_dict(self):
+        pass
+
 
 class RecordType(Enum):
     NOTE = 1

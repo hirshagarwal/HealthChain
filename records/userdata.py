@@ -28,6 +28,9 @@ class UserData(Record):
         return json.dumps(data)
 
     def json_serialize(self):
+        return json.dumps(self.get_dict())
+
+    def get_dict(self):
         first_name_encrypted = self.encrypt(self.first_name)
         last_name_encrypted = self.encrypt(self.last_name)
         data = {
@@ -37,7 +40,7 @@ class UserData(Record):
             'dob': self.dob,
             'public_key': self.public_key.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo).decode('utf-8')
         }
-        return json.dumps(data)
+        return data
 
     def encrypt(self, data):
         encrypted_bytes = self.public_key.encrypt(data.encode('utf-8'),

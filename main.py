@@ -23,7 +23,7 @@ if __name__ == '__main__':
     print(init_user_block.json_serialize())
 
     # Persist user
-    new_block = Block.new_block(first_block, user.user_id, init_user_block.json_serialize())
+    new_block = Block.new_block(first_block, user.user_id, init_user_block)
     blockchain.add_block(new_block)
 
     # Make first note block

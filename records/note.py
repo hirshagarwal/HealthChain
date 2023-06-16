@@ -9,11 +9,13 @@ class Note(Record):
         self.clinical_note = clinical_note
 
     def json_serialize(self):
-        data = {
+        return json.dumps(self.get_dict())
+
+    def get_dict(self):
+        return {
             'record_type': self.record_type.name,
             'clinical_note': self.clinical_note
         }
-        return json.dumps(data)
 
     @staticmethod
     def json_deserialize_note(json_object):

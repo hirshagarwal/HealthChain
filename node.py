@@ -79,9 +79,10 @@ class Node(Bottle):
         add_block_string = request.body.read()
         add_block_json = json.loads(add_block_string)
         data = add_block_json['block_data']
+        record_object = Block.record_from_json(json.dumps(data))
         user_id = add_block_json['user_id']
         last_block = self.blockchain.read_tail_block()
-        new_block = Block.new_block(last_block, user_id, data)
+        new_block = Block.new_block(last_block, user_id, record_object)
         self.blockchain.add_block(new_block)
         return json.dumps(new_block.get_dict())
 
