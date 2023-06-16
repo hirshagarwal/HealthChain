@@ -4,6 +4,7 @@ import json
 from base64 import b64encode
 
 from records import record
+from records.genesis import Genesis
 from records.note import Note
 from records.record import RecordType
 from records.userdata import UserData
@@ -45,7 +46,7 @@ class Block:
         return {
             'index': self.index,
             'timestamp': str(self.timestamp),
-            'block_data': self.data,
+            'block_data': self.data.get_dict(),
             'prev_hash': self.prev_hash,
             'user_id': str(self.user_id),
             'hash': self.hash,
@@ -59,7 +60,7 @@ class Block:
 
     @staticmethod
     def genesis_block():
-        return Block(0, dt.datetime.now(), "Genesis block transaction", " ", "root")
+        return Block(0, dt.datetime.now(), Genesis(), " ", "root")
 
     @staticmethod
     def new_block(last_block, user_id, block_data: record):

@@ -3,8 +3,9 @@ import json
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives._serialization import PublicFormat, Encoding
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey, RSAPrivateKey
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
 from records.record import Record, RecordType
 
@@ -30,13 +31,16 @@ class UserData(Record):
     def json_serialize(self):
         return json.dumps(self.get_dict())
 
+    def get_data_encrypted(self):
+        self.first_name = self.encrypt(self.first_name)
+        self.last_name = self.encrypt(self.last_name)
+        return self
+
     def get_dict(self):
-        first_name_encrypted = self.encrypt(self.first_name)
-        last_name_encrypted = self.encrypt(self.last_name)
         data = {
             'record_type': self.record_type.name,
-            'first_name': first_name_encrypted,
-            'last_name': last_name_encrypted,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
             'dob': self.dob,
             'public_key': self.public_key.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo).decode('utf-8')
         }
@@ -52,16 +56,16 @@ class UserData(Record):
         return base64.b64encode(encrypted_bytes).decode('ASCII')
 
     @staticmethod
-    def decrypt_user_data_block(block_json, private_key: RSAPrivateKey):
-        first_name_encrypted = block_json['first_name']
-        last_name_encrypted = block_json['last_name']
+    def decrypt_user_data_block(user_data_json, private_key: RSAPrivateKey):
+        first_name_encrypted = user_data_json['first_name']
+        last_name_encrypted = user_data_json['last_name']
         first_name = UserData.decrypt_string(first_name_encrypted, private_key)
         last_name = UserData.decrypt_string(last_name_encrypted, private_key)
 
         return UserData(
             first_name,
             last_name,
-            block_json['dob'],
+            user_data_json['dob'],
             private_key.public_key()
         )
 
@@ -84,5 +88,5 @@ class UserData(Record):
             json_object['first_name'],
             json_object['last_name'],
             json_object['dob'],
-            json_object['public_key']
+            load_pem_public_key(json_object['public_key'].encode('utf-8'))
         )

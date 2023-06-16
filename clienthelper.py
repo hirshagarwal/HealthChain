@@ -20,4 +20,4 @@ class ClientHelper:
             dob,
             user_object.public_key
         )
-        return Block.new_block(tail_block, user_object.user_id, init_user_block)
+        return Block.new_block(tail_block, user_object.user_id, init_user_block.get_data_encrypted())

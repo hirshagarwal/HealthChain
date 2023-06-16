@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import requests as requests
@@ -5,6 +6,7 @@ from requests import Response
 
 from blockchain import Block
 from clienthelper import ClientHelper
+from records.userdata import UserData
 from user import User
 
 
@@ -30,5 +32,5 @@ if __name__ == '__main__':
     block = client.helper.build_user_block('Hirsh', 'Agarwal', '16/08/1997', user)
     response = client.add_block(block)
     print(response)
-    # decrypted_block = UserData.decrypt_user_data_block(block.data, user.private_key)
-    # print(client.get_blockchain())
+    decrypted_block = UserData.decrypt_user_data_block(response['block_data'], user.private_key)
+    print(decrypted_block)

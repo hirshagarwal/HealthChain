@@ -19,3 +19,4 @@ class RecordType(Enum):
     NOTE = 1
     USER_DATA = 2
     SIMPLE_TEST = 3
+    GENESIS = 4
