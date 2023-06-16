@@ -17,8 +17,10 @@ class HealthChainClient:
         self.helper = ClientHelper(host, port)
 
     def add_block(self, new_block: Block):
-        request_response = requests.post("http://{}:{}/add_block".format(self.host, self.port),
-                                 data=new_block.get_json())
+        request_response = requests.post("http://{}:{}/add_block".format(
+            self.host,
+            self.port),
+            data=new_block.get_json())
         return request_response.json()
 
     def get_blockchain(self) -> Response:

@@ -1,6 +1,8 @@
 import json
+import sys
 import uuid
 
+import requests
 from bottle import Bottle, request, response
 
 from blockchain import Chain, Block
@@ -27,10 +29,15 @@ class Node(Bottle):
 
         if entry_node is not None:
             print("Registering node to: {}".format(entry_node))
-            # Send request with node connection string to the entry node
-            pass
+            register_node_response = requests.post("http://{}/register_node".format(entry_node),
+                                                   data=self.node_connection_string()
+                                                   )
+            self.nodes.add(json.dumps(register_node_response.json()))
 
         self.nodes.add(self.node_connection_string())
+        print("Nodes: ")
+        for _node in self.nodes:
+            print(_node)
 
         self.run()
 
@@ -56,8 +63,19 @@ class Node(Bottle):
         return json.dumps(node_list)
 
     def register_node(self):
-        new_node_string = request.body.read()
+        new_node_string = request.body.read().decode('utf-8')
+        new_node_object = json.loads(new_node_string)
+        for _node in self.nodes:
+            _node_object = json.loads(_node)
+            if (_node_object['host'] == new_node_object['host']
+                    and _node_object['port'] == new_node_object['port']):
+                self.nodes.discard(_node)
+                break
+
         self.nodes.add(new_node_string)
+        print("New node registered: {} \nCurrent node list: ".format(new_node_string))
+        for _node in self.nodes:
+            print(_node)
         return self.node_connection_string()
 
     def get_blockchain(self):
@@ -93,9 +111,27 @@ class Node(Bottle):
 
 
 if __name__ == '__main__':
-    node = Node('localhost', '8080')
-
-# TODO: Clean this up and add some checks for the input
-# Node(str(sys.argv[1]), sys.argv[2], sys.argv[3])
+    _host = "localhost"
+    _port = "8080"
+    _target = None
+    try:
+        _host = str(sys.argv[1])
+        _port = str(sys.argv[2])
+        _target = str(sys.argv[3])
+    except IndexError as ex:
+        print("No target supplied: {}".format(ex))
+    if _target is not None:
+        print("Running on {}:{} targeting {}".format(
+            _host,
+            _port,
+            _target
+        ))
+        node = Node(_host, _port, _target)
+    else:
+        print("Running on {}:{}".format(
+            _host,
+            _port
+        ))
+        node = Node(_host, _port)
 
 
