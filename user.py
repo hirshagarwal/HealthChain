@@ -1,3 +1,4 @@
+import base64
 import uuid
 
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -26,9 +27,10 @@ class User:
 
     @staticmethod
     def verify_message(signed_message, expected_message, public_key):
+        signed_message = base64.b64decode(signed_message)
         public_key.verify(
             signed_message,
-            expected_message,
+            expected_message.encode('utf-8'),
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
                 salt_length=padding.PSS.MAX_LENGTH

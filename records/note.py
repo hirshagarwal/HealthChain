@@ -18,6 +18,7 @@ class Note(Record):
         }
 
     @staticmethod
-    def json_deserialize_note(json_object):
+    def json_deserialize_note(json_string):
+        json_object = json.loads(json_string)
         return Note(json_object['clinical_note'])
 

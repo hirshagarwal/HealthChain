@@ -1,4 +1,4 @@
-import json
+import base64
 import uuid
 
 import requests as requests
@@ -26,11 +26,26 @@ class HealthChainClient:
                             .format(self.host, self.port)).json()
 
 
+def create_user_demo():
+    demo_client = HealthChainClient('localhost', '8080')
+    demo_user = User(uuid.uuid4())
+    demo_block = demo_client.helper.build_user_block('Hirsh', 'Agarwal', '16/08/1997', demo_user)
+    demo_response = demo_client.add_block(demo_block)
+    print(demo_response)
+    decrypted_block = UserData.decrypt_user_data_block(demo_response['block_data'], demo_user.private_key)
+    print(decrypted_block)
+
+
 if __name__ == '__main__':
     client = HealthChainClient('localhost', '8080')
     user = User(uuid.uuid4())
     block = client.helper.build_user_block('Hirsh', 'Agarwal', '16/08/1997', user)
     response = client.add_block(block)
-    print(response)
-    decrypted_block = UserData.decrypt_user_data_block(response['block_data'], user.private_key)
-    print(decrypted_block)
+    response2 = client.add_block(block)
+
+    note_block = client.helper.build_note_block("Patient attended clinic today...", user)
+    note_block.signed_hash = user.sign_message(note_block.hash.encode('utf-8'))
+    print(note_block.hash)
+    response_note = client.add_block(note_block)
+    print(response_note)
+

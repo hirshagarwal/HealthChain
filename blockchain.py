@@ -1,3 +1,4 @@
+import base64
 import datetime as dt
 import hashlib as hl
 import json
@@ -50,12 +51,14 @@ class Block:
             'prev_hash': self.prev_hash,
             'user_id': str(self.user_id),
             'hash': self.hash,
-            'signed_hash': self.get_b64_string(self.signed_hash)
+            'signed_hash': self.signed_hash
         }
 
     def get_json(self):
         serializable_dict: record = self.get_dict()
         serializable_dict['block_data'] = self.data.get_dict()
+        if self.signed_hash is not None:
+            serializable_dict['signed_hash'] = base64.b64encode(self.signed_hash).decode('utf-8')
         return json.dumps(serializable_dict)
 
     @staticmethod
@@ -78,19 +81,23 @@ class Block:
 
     @staticmethod
     def from_json(json_block):
-        return Block(json_block['index'],
-                     json_block['timestamp'],
-                     json_block['block_data'],
-                     json_block['prev_hash'],
-                     json_block['user_id']
-                     )
+        block = Block(json_block['index'],
+                      json_block['timestamp'],
+                      Block.record_from_json(json.dumps(json_block['block_data'])),
+                      json_block['prev_hash'],
+                      json_block['user_id']
+                      )
+        if json_block['signed_hash'] is not None:
+            block.signed_hash = json_block['signed_hash']
+        block.hash = json_block['hash']
+        return block
 
     @staticmethod
     def record_from_json(json_string):
         json_object = json.loads(json_string)
         if json_object['record_type'] == RecordType.USER_DATA.name:
             return UserData.json_deserialize_userdata(json_string)
-        elif json_object['record_type'] == RecordType.CLINICAL_NOTE.name:
+        elif json_object['record_type'] == RecordType.NOTE.name:
             return Note.json_deserialize_note(json_string)
 
 
@@ -135,5 +142,5 @@ class Chain:
         user_data = user_origin_block.data
         User.verify_message(
             new_block.signed_hash,
-            new_block.hash_block().encode('utf-8'),
+            new_block.hash,
             user_data.public_key)

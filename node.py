@@ -78,13 +78,9 @@ class Node(Bottle):
         response.content_type = 'application/json'
         add_block_string = request.body.read()
         add_block_json = json.loads(add_block_string)
-        data = add_block_json['block_data']
-        record_object = Block.record_from_json(json.dumps(data))
-        user_id = add_block_json['user_id']
-        last_block = self.blockchain.read_tail_block()
-        new_block = Block.new_block(last_block, user_id, record_object)
-        self.blockchain.add_block(new_block)
-        return json.dumps(new_block.get_dict())
+        insert_block = Block.from_json(add_block_json)
+        self.blockchain.add_block(insert_block)
+        return json.dumps(insert_block.get_dict())
 
     def consensus(self):
         pass
@@ -101,6 +97,6 @@ if __name__ == '__main__':
     node = Node('localhost', '8080')
 
 # TODO: Clean this up and add some checks for the input
-Node(str(sys.argv[1]), sys.argv[2], sys.argv[3])
+# Node(str(sys.argv[1]), sys.argv[2], sys.argv[3])
 
 
