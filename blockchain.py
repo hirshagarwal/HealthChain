@@ -119,6 +119,10 @@ class Chain:
             self.blockchain.append(new_block)
         else:
             user_origin_block = self.blockchain[user_index]
+
+            assert new_block.data.record_type != RecordType.USER_DATA, "For now you can't overwrite your user block"
+            assert new_block.signed_hash is not None, "A new block must have a signed hash"
+
             self.verify_transaction(user_origin_block, new_block)
             self.blockchain.append(new_block)
 
