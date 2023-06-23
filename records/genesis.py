@@ -14,3 +14,7 @@ class Genesis(Record):
         return {
             'record_type': self.record_type.name
         }
+
+    @staticmethod
+    def deserialize_genesis(json_string):
+        return Genesis()

@@ -6,6 +6,7 @@ from records.userdata import UserData
 
 from user import User
 
+# DEPRECATED
 if __name__ == '__main__':
     blockchain = Chain()
     first_block = blockchain.read_tail_block()

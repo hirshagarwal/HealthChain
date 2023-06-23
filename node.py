@@ -33,6 +33,10 @@ class Node(Bottle):
                                                    data=self.node_connection_string()
                                                    )
             self.nodes.add(json.dumps(register_node_response.json()))
+            target_blockchain = requests.get("http://{}:{}/get_blockchain".format(
+                entry_node.split(':')[0], entry_node.split(':')[1]
+            )).json()
+            self.build_from_target(target_blockchain)
 
         self.nodes.add(self.node_connection_string())
         print("Nodes: ")
@@ -40,6 +44,13 @@ class Node(Bottle):
             print(_node)
 
         self.run()
+
+    def build_from_target(self, target_json):
+        self.blockchain.blockchain = []
+        chain = target_json['blockchain']
+        for _block in chain:
+            block = Block.from_json(_block)
+            self.blockchain.blockchain.append(block)
 
     def node_connection_string(self):
         connection_dict = {
@@ -75,6 +86,9 @@ class Node(Bottle):
         self.nodes.add(new_node_string)
         print("New node registered: {} \nCurrent node list: ".format(new_node_string))
         for _node in self.nodes:
+            if _node == self.node_connection_string():
+                print("(SELF)" + _node)
+                continue
             print(_node)
         return self.node_connection_string()
 
@@ -96,11 +110,20 @@ class Node(Bottle):
         add_block_string = request.body.read()
         add_block_json = json.loads(add_block_string)
         insert_block = Block.from_json(add_block_json)
+
+        # Make sure our chain is up to date
+        for node in self.nodes:
+            if node == self.node_connection_string():
+                continue
+            node_dict = json.loads(node)
+            tail_block = requests.get("http://{}:{}/get_tail_block"
+                                      .format(node_dict['host'], node_dict['port'])).json()
+            if tail_block['hash'] == self.get_tail_block()['hash']:
+                print("Current chain up to date. Proceed to add block")
+                pass
+
         self.blockchain.add_block(insert_block)
         return json.dumps(insert_block.get_dict())
-
-    def consensus(self):
-        pass
 
     def test(self):
         return_message = request.headers.get('message')

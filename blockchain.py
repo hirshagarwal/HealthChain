@@ -99,6 +99,8 @@ class Block:
             return UserData.json_deserialize_userdata(json_string)
         elif json_object['record_type'] == RecordType.NOTE.name:
             return Note.json_deserialize_note(json_string)
+        elif json_object['record_type'] == RecordType.GENESIS.name:
+            return Genesis.deserialize_genesis(json_string)
 
 
 class Chain:
