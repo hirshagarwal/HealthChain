@@ -118,9 +118,11 @@ class Node(Bottle):
             node_dict = json.loads(node)
             tail_block = requests.get("http://{}:{}/get_tail_block"
                                       .format(node_dict['host'], node_dict['port'])).json()
-            if tail_block['hash'] == self.get_tail_block()['hash']:
+            if tail_block['hash'] == self.blockchain.read_tail_block().hash:
                 print("Current chain up to date. Proceed to add block")
+            else:
                 pass
+                # TODO: Fetch current chain and fail transaction
 
         self.blockchain.add_block(insert_block)
         return json.dumps(insert_block.get_dict())
