@@ -38,7 +38,7 @@ def create_user_demo():
 
 
 if __name__ == '__main__':
-    client = HealthChainClient('localhost', '8081')
+    client = HealthChainClient('localhost', '8080')
     user = User(uuid.uuid4())
     block = client.helper.build_user_block('Hirsh', 'Agarwal', '16/08/1997', user)
     response = client.add_block(block)

@@ -1,5 +1,6 @@
 import json
 import sys
+import threading
 import uuid
 
 import requests
@@ -24,6 +25,7 @@ class Node(Bottle):
         self.get('/get_blockchain', callback=self.get_blockchain)
         self.get('/get_tail_block', callback=self.get_tail_block)
 
+        self.post('/update_blockchain', callback=self.update_blockchain)
         self.post('/register_node', callback=self.register_node)
         self.post('/add_block', callback=self.add_block)
 
@@ -131,7 +133,27 @@ class Node(Bottle):
                 })
 
         self.blockchain.add_block(insert_block)
+        threading.Thread(target=self.prompt_blockchain_update).start()
         return json.dumps(insert_block.get_dict())
+
+    def prompt_blockchain_update(self):
+        for _node in self.nodes:
+            if _node == self.node_connection_string():
+                continue
+            node_dict = json.loads(_node)
+            request_response = requests.post("http://{}:{}/update_blockchain".format(
+                node_dict['host'], node_dict['port']),
+                data=self.node_connection_string())
+            return request_response
+
+    def update_blockchain(self):
+        response.content_type = 'application/json'
+        update_blockchain_string = request.body.read()
+        update_blockchain_json = json.loads(update_blockchain_string)
+        current_chain = requests.get(
+            "http://{}:{}/get_blockchain"
+            .format(update_blockchain_json['host'], update_blockchain_json['port'])).json()
+        self.build_from_target(current_chain)
 
     def test(self):
         return_message = request.headers.get('message')

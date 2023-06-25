@@ -4,6 +4,9 @@ HealthChain is an open source Python based blockchain specifically designed to s
 It is designed to be anonymous, but not fully encrypted, making it possible to easily run analysis on population wide
 data.
 
+## Runtime Instruction
+Python environment should be activated `souce venv/bin/activate`
+
 # Technical Overview
 ## BlockChain
 The blockchain is simply a list of `Block` objects. Each block contains some metadata, as well as a `data` field, 
