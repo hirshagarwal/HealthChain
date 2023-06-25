@@ -121,8 +121,14 @@ class Node(Bottle):
             if tail_block['hash'] == self.blockchain.read_tail_block().hash:
                 print("Current chain up to date. Proceed to add block")
             else:
-                pass
-                # TODO: Fetch current chain and fail transaction
+                target_blockchain = requests.get("http://{}:{}/get_blockchain".format(
+                    node_dict['host'], node_dict['port']
+                )).json()
+                self.build_from_target(target_blockchain)
+                return json.dumps({
+                    'status': 'operation failed',
+                    'reason': 'blockchain outdated'
+                })
 
         self.blockchain.add_block(insert_block)
         return json.dumps(insert_block.get_dict())
