@@ -112,10 +112,10 @@ class Node(Bottle):
         insert_block = Block.from_json(add_block_json)
 
         # Make sure our chain is up to date
-        for node in self.nodes:
-            if node == self.node_connection_string():
+        for _node in self.nodes:
+            if _node == self.node_connection_string():
                 continue
-            node_dict = json.loads(node)
+            node_dict = json.loads(_node)
             tail_block = requests.get("http://{}:{}/get_tail_block"
                                       .format(node_dict['host'], node_dict['port'])).json()
             if tail_block['hash'] == self.blockchain.read_tail_block().hash:
