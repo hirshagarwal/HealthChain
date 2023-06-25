@@ -5,7 +5,7 @@ It is designed to be anonymous, but not fully encrypted, making it possible to e
 data.
 
 ## Runtime Instruction
-Python environment should be activated `souce venv/bin/activate`
+Python environment should be activated with `source venv/bin/activate`
 
 # Technical Overview
 ## BlockChain
